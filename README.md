@@ -13,9 +13,9 @@ text at once**, with per-key fallback to the game's own translations.
 ## Why
 
 The usual approach, overwriting `global.mo` in `res_mods/texts/<locale>`, has had several issues even if it's just replacing one string:
-- **Mods conflict**: Two translation mods cannot coexist.
-- **Monolithic**: The whole .mo file must be shipped.
-- **Version Dependency**: .mo file must be updated every patch.
+- **Mod conflicts**: Two translation mods cannot coexist.
+- **Monolithic**: The whole `.mo` catalog must be shipped.
+- **Version Dependency**: `.mo` file requires update every patch.
 
 This project replaces `bin64/gettext_x64r.dll` with a proxy that checks mod catalogs first and passes
 everything else to the game's original library. Lookups become a **priority-ordered registry**:
@@ -56,9 +56,8 @@ and the game stops starting, Game Center → **Check and Repair** puts everythin
    - **It must only consist of the translations you modify**.
    - The conventional `.mo` mods that ship unrelated entries are now actively harmful for other mods, and contradicts the whole point of this project.
 2. Drop the result in `bin\<wows_version>\res_mods\texts\<locale>\*`:
-   - **Per-language.** A file under `texts\de\` applies only while the player is in German.
-   - **Any depth.** Everything below `<locale>` is searched, so `LC_MESSAGES\` works and so does
-     not bothering.
+   - **Per-language:** A file under `texts\de\` applies only while the client is in German.
+   - **Any depth:** Everything below `<locale>` is searched recursively, so `LC_MESSAGES\` or any arbitrary structure works.
 3. Done!
 
 ## Resolve Mod Conflicts
