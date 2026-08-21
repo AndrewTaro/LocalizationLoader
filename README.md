@@ -12,18 +12,12 @@ text at once**, with per-key fallback to the game's own translations.
 
 ## Why
 
-The usual approach — your own `global.mo` in `res_mods/texts/<locale>` — has a hard
-**one-mod ceiling**. The game builds exactly one catalog path:
+The usual approach, overwriting `global.mo` in `res_mods/texts/<locale>`, has had several issues even if it's just replacing one string:
+- **Mods conflict**: Two translation mods cannot coexist.
+- **Monolithic**: The whole .mo file must be shipped.
+- **Version Dependency**: .mo file must be updated every patch.
 
-```
-<dir>/<locale>/LC_MESSAGES/global.mo
-```
-
-and every part but `<locale>` is fixed: the directory is bound once at startup, the domain is
-always `global`. Two translation mods cannot coexist — the last one to set the locale wins
-outright, and nothing merges them.
-
-This replaces `bin64/gettext_x64r.dll` with a proxy that checks mod catalogs first and passes
+This project replaces `bin64/gettext_x64r.dll` with a proxy that checks mod catalogs first and passes
 everything else to the game's original library. Lookups become a **priority-ordered registry**:
 every mod drops a `.mo` file into one folder, all of them load, and any key you don't define
 falls through to the vanilla text. You never have to ship a full catalog to change three
@@ -31,14 +25,11 @@ strings.
 
 ## Install
 
-Close the game first. In your install's `bin\` folder, open the highest-numbered folder (one
-per game version), then `bin64\` inside it:
-
+1. Go to `<wows>\bin\<wows_version>\bin64`
 1. **If `gettext_x64r_orig.dll` already exists, skip this step.** Otherwise rename
    `gettext_x64r.dll` to `gettext_x64r_orig.dll`.
 2. Copy `gettext_x64r.dll` from this package into that `bin64\`.
-3. Go up one level and create `res_mods\texts\<locale>\` — for example `res_mods\texts\en\`.
-   Your `.mo` catalogs go there.
+3. Done!
 
 > **Step 1's condition matters.** Renaming unconditionally works the first time and breaks the
 > second: it renames *the loader* to `gettext_x64r_orig.dll`, which then tries to load itself.
@@ -59,22 +50,18 @@ That's all of it — `_orig` *is* the untouched original, so there is no backup 
 `gettext_proxy.log` and the `res_mods\texts` folder can go too. If you delete the wrong file
 and the game stops starting, Game Center → **Check and Repair** puts everything back.
 
-## Using it
+## How to Use
 
-Catalogs are standard GNU `.mo` files, keyed by the game's `IDS_` string IDs. Build one from a
-`.po` with the standard gettext tool:
-
-```
-msgfmt mymod.po -o 50_mymod.mo
-```
-
-Drop the result in `bin\<build>\res_mods\texts\<locale>\`, mirroring the game's own
-`res\texts\<locale>\` layout:
-
-- **Per-language.** A file under `texts\de\` applies only while the player is in German.
-- **Any depth.** Everything below `<locale>` is searched, so `LC_MESSAGES\` works and so does
+1. Create .mo file with the standard gettext tools, such as POEdit.
+  - **It must only consist of the translations you modify**.
+  - The conventional `.mo` mods that ship the unrelated entries are now actively harmful for other mods, and contradicsts the whole point of this project.
+2. Drop the result in `bin\<wows_version>\res_mods\texts\<locale>\*`:
+  - **Per-language.** A file under `texts\de\` applies only while the player is in German.
+  - **Any depth.** Everything below `<locale>` is searched, so `LC_MESSAGES\` works and so does
   not bothering.
+3. Done!
 
+## Resolve Mod Conflicts
 When two catalogs define the same key, a header field decides:
 
 ```
@@ -84,9 +71,9 @@ X-LocalizationLoader-Priority: 90
 **Higher wins.** The rest of the rules:
 
 - **Absent means 50**, so other mods can deliberately place themselves above or below you.
-- **`global.mo` is ignored** in that folder. The game's own overlay already applies a file by
+- **`global.mo` is ignored** in that folder and you must not use that name. The game's own overlay already applies a file by
   that name, and it replaces the whole vanilla catalog rather than merging. Name yours
-  something else, e.g. `50_mymod.mo`.
+  something else, e.g. `mymod.mo`.
 - **`IDS_PLURAL_FORMS` is refused.** The client reads that answer back as a plural *form
   index*, not as text, so claiming it would break plural selection across the whole UI.
 - **The log says so** if you hit either refusal.
@@ -106,8 +93,6 @@ translates well over 100,000 times per session, overwhelmingly repeats.
 An overridden key never reaches the library at all (~18 ns), and lookups scale across threads,
 which matters because the client translates from several threads at once.
 
-To rule the cache out while debugging, set `WOWS_GETTEXT_PROXY_NOMEMO=1`.
-
 ## Notes
 
 - The library actually doing the translating is still the signed one your client shipped with —
@@ -118,8 +103,3 @@ To rule the cache out while debugging, set `WOWS_GETTEXT_PROXY_NOMEMO=1`.
 - Troubleshooting: the loader writes `bin64\gettext_proxy.log` — which original it bound, which
   catalogs it loaded, how many keys each contributed, and the first several overrides applied.
   Delete it freely, it is recreated.
-
-## Licence
-
-The loader is this project's own work. Nothing belonging to the game is redistributed: the
-client's own `gettext_x64r.dll` never leaves the machine it is installed on.
