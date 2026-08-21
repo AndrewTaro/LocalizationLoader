@@ -31,7 +31,7 @@ strings.
 2. Copy `gettext_x64r.dll` from this package into that `bin64\`.
 3. Done!
 
-> **Step 1's condition matters.** Renaming unconditionally works the first time and breaks the
+> **Step 2's condition matters.** Renaming unconditionally works the first time and breaks the
 > second: it renames *the loader* to `gettext_x64r_orig.dll`, which then tries to load itself.
 > The loader detects that and refuses — untranslated text and a log line rather than a dead
 > client — but your original is gone by then, and only Check and Repair brings it back.
@@ -53,12 +53,12 @@ and the game stops starting, Game Center → **Check and Repair** puts everythin
 ## How to Use
 
 1. Create .mo file with the standard gettext tools, such as POEdit.
-  - **It must only consist of the translations you modify**.
-  - The conventional `.mo` mods that ship the unrelated entries are now actively harmful for other mods, and contradicsts the whole point of this project.
+   - **It must only consist of the translations you modify**.
+   - The conventional `.mo` mods that ship unrelated entries are now actively harmful for other mods, and contradicts the whole point of this project.
 2. Drop the result in `bin\<wows_version>\res_mods\texts\<locale>\*`:
-  - **Per-language.** A file under `texts\de\` applies only while the player is in German.
-  - **Any depth.** Everything below `<locale>` is searched, so `LC_MESSAGES\` works and so does
-  not bothering.
+   - **Per-language.** A file under `texts\de\` applies only while the player is in German.
+   - **Any depth.** Everything below `<locale>` is searched, so `LC_MESSAGES\` works and so does
+     not bothering.
 3. Done!
 
 ## Resolve Mod Conflicts
